@@ -3,7 +3,7 @@ Contributors: mychelle, mufusa, getshopped
 Tags: bbPress 2.0, Support forum, resolved topics, user rankings
 Requires at least: 3.2
 Tested up to: 3.2.1
-Stable tag: 2.1
+Stable tag: 3.0
 
 The GetShopped support forums plugin is used with bbPress to transform your forums into a support forum.
 
@@ -72,6 +72,9 @@ not more than 50 posts
 6. User rank display eg
 
 == Changelog ==
+=3.0=
+* warnings and bugs fixed
+* added in the ability to have a trusted user tag for forum admin and mods
 
 = 2.0 =
 * added in new widgets (topic claim, urgent topics, recently resolved)

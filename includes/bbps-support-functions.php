@@ -42,7 +42,7 @@ function bbps_add_support_forum_features(){
 		?> <div id="bbps_support_forum_options"> <?php
 		//get out the option to tell us who is allowed to view and update the drop down list.
 		if ( $can_edit == true ){ ?>
-			<p class="topic_stat">This topic is: &nbsp; </p> <?php bbps_generate_staus_options($topic_id,$status);
+			<?php bbps_generate_status_options($topic_id,$status);
 		}else{
 		?>
 			This topic is: <?php echo $status ;
@@ -53,7 +53,7 @@ function bbps_add_support_forum_features(){
 		?>
 		<div id ="bbps_support_forum_move">
 			<form id="bbps-topic-move" name="bbps_support_topic_move" action="" method="post">
-				Move topic to: <?php bbp_dropdown(); ?>
+				<label for="bbp_forum_id">Move topic to: </label><?php bbp_dropdown(); ?>
 				<input type="submit" value="Move" name="bbps_topic_move_submit" />
 				<input type="hidden" value="bbps_move_topic" name="bbps_action"/>
 				<input type="hidden" value="<?php echo $topic_id ?>" name="bbps_topic_id" />
@@ -88,7 +88,7 @@ function bbps_get_topic_status($topic_id){
 }
 
 //generates a drop down list with the support forum topic status only for admin and moderators tho.
-function bbps_generate_staus_options($topic_id){
+function bbps_generate_status_options($topic_id){
 	
 	$dropdown_options = get_option( '_bbps_used_status' );
 	$status = get_post_meta( $topic_id, '_bbps_topic_status', true );
@@ -101,6 +101,7 @@ function bbps_generate_staus_options($topic_id){
 		$value = $default;
 	?>
 	<form id="bbps-topic-status" name="bbps_support" action="" method="post">
+		<label for="bbps_support_options">This topic is: </label>
 		<select name="bbps_support_option" id="bbps_support_options"> 
 			<?php
 			//we only want to display the options the user has selected. the long term goal is to let users add their own forum statuses
@@ -297,21 +298,25 @@ add_action( 'bbp_template_before_single_topic' , 'bbps_display_claimed_message' 
 	update_post_meta($topic_id, '_bbps_topic_claimed', $user_id);
 */
 function bbps_assign_topic_form(){
-	$topic_id = bbp_get_topic_id();
+
 	if( (get_option('_bbps_topic_assign') == 1) && (current_user_can('administrator') || current_user_can('bbp_moderator')) ) { 
+		$topic_id = bbp_get_topic_id();
 		$topic_assigned = get_post_meta($topic_id, 'bbps_topic_assigned', true);
 		global $current_user;
 		get_currentuserinfo();
 		$current_user_id = $current_user->ID;
 	?>	<div id="bbps_support_forum_options"> <?php
-		
 			
 			$user_login = $current_user->user_login;
-			if($topic_assigned == $current_user_id){
-				?> <div class='bbps-support-forums-message'> This topic is assigned to you!</div><?php
-			}
-			else{
-		?> <div class='bbps-support-forums-message'> This topic is already assigned to: <?php echo $user_login; ?></div><?php	
+			if(!empty($topic_assigned)){
+				if($topic_assigned == $current_user_id){
+					?> <div class='bbps-support-forums-message'> This topic is assigned to you!</div><?php
+				}
+				else{
+					$user_info = get_userdata ($topic_assigned);
+					$assigned_user_name = $user_info->user_login;
+				?> <div class='bbps-support-forums-message'> This topic is already assigned to: <?php echo $assigned_user_name; ?></div><?php	
+				}
 		}
 	
 		?>
@@ -325,6 +330,7 @@ function bbps_assign_topic_form(){
 		</div></div>  <?php
 		
 		
+	
 	}
 	
 }
@@ -359,7 +365,7 @@ function bbps_user_assign_dropdown(){
 		echo $text;
 			?>
 		<select name="bbps_assign_list" id="bbps_support_options"> 
-		<option value="">Please Select</option><?php
+		<option value="">Unassigned</option><?php
 		foreach ($all_users as $user){
 		?>
 			<option value="<?php echo $user->ID; ?>"> <?php echo $user->user_login; ?></option>
@@ -374,24 +380,26 @@ function bbps_user_assign_dropdown(){
 function bbps_assign_topic(){
 	$user_id = $_POST['bbps_assign_list'];
 	$topic_id = $_POST['bbps_topic_id'];
-	$userinfo = get_userdata($user_id);
-	$user_email = $userinfo->user_email;
-	$post_link = get_permalink( $topic_id );	
-	//add the user as a subscriber to the topic and send them an email to let them know they have been assigned to a topic
-	bbp_add_user_subscription( $user_id, $topic_id );
-	/*update the post meta with the assigned users id*/
-	$assigned = update_post_meta($topic_id, 'bbps_topic_assigned', $user_id);
-	$message = <<< EMAILMSG
-	You have been assigned to the following topic, by another forum moderator or the site administrator. Please take a look at it when you get a chance.
-	$post_link
+	
+	if ($user_id > 0){
+		$userinfo = get_userdata($user_id);
+		$user_email = $userinfo->user_email;
+		$post_link = get_permalink( $topic_id );
+		//add the user as a subscriber to the topic and send them an email to let them know they have been assigned to a topic
+		bbp_add_user_subscription( $user_id, $topic_id );
+		/*update the post meta with the assigned users id*/
+		$assigned = update_post_meta($topic_id, 'bbps_topic_assigned', $user_id);
+		$message = <<< EMAILMSG
+		You have been assigned to the following topic, by another forum moderator or the site administrator. Please take a look at it when you get a chance.
+		$post_link
 EMAILMSG;
-	if ($assigned == true){
-		wp_mail($user_email,'A forum topic has been assigned to you', $message);
+		if ($assigned == true){
+			wp_mail($user_email,'A forum topic has been assigned to you', $message);
+		}
 	}
 }
 
 // I believe this Problem is because your Plugin is loading at the wrong time, and can be fixed by wrapping your plugin in a wrapper class.
-// Also guys, rememeber to check WP_DEBUG from time to time :) - fixed all debug wanrings and notices 
 //need to find a hook or think of the best way to do this
 	if (!empty($_POST['bbps_support_topic_assign'])){
 		bbps_assign_topic($_POST);

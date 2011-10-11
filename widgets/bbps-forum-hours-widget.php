@@ -33,6 +33,7 @@ class bbps_support_hours_widget extends WP_Widget {
 			'forum_open_text' => 'Our forums are open',
 			'forum_closed_text' => 'Our forums are closed',
 			'closed_weekends' => '',
+			'display_hours' =>'',
 			);
 			
 			$instance = wp_parse_args( (array) $instance, $defaults );

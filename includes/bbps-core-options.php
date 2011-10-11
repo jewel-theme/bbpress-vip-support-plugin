@@ -99,5 +99,11 @@ function bbps_is_topic_assign_enabled(){
 	return get_option( '_bbps_topic_assign' );
 }
 
+function bbps_is_user_trusted_enabled(){
+	return get_option( '_bbps_enable_trusted_tag' );
+}
+
+
+
 
 ?>
